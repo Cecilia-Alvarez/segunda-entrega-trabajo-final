@@ -1,8 +1,3 @@
-const { ENV: { PERS } } = require('../../config');
-
-let ProductsDao;
-let CartsDao;
-
 import dotenv from 'dotenv';
 dotenv.config();
 
