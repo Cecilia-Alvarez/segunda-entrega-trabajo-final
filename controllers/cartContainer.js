@@ -1,41 +1,46 @@
+const { CartsDao } = require('../models/daos/index');
+const { productsDao } = require('./productContainer');
+
+const cartsDao = new CartsDao();
+
 const moment = require("moment");
 const fs = require("fs").promises;
 
 class Cart {
 
-    constructor() {
-        this.path = "./data/cart.txt";
-        this.cart = [];
-        this.id = 1;
-        this.cartProducts = {
-            id: this.id,
-            timestamp: moment().format("L LTS"),
-            name: "",
-            description: "",
-            code: "",
-            img: "",
-            price: 0,
-            stock: 0,
-        };
-    }
+    // constructor() {
+    //     this.path = "./data/cart.txt";
+    //     this.cart = [];
+    //     this.id = 1;
+    //     this.cartProducts = {
+    //         id: this.id,
+    //         timestamp: moment().format("L LTS"),
+    //         name: "",
+    //         description: "",
+    //         code: "",
+    //         img: "",
+    //         price: 0,
+    //         stock: 0,
+    //     };
+    // }
 
 
     async cartDisplay() {
         try {
-            const data = await fs.readFile(this.path, "utf8");
+            const data = await fs.readFile(cartsDao.path, "utf8");
             if (data && data.toString().trim() !== "") {
-                this.cart = JSON.parse(data);
-                if (this.cart.length > 0) {
-                    this.id = parseInt(this.cart[this.cart.length - 1].id) + 1;
+                cartsDao.cart = JSON.parse(data);
+                if (cartsDao.cart.length > 0) {
+                    cartsDao.id = parseInt(cartsDao.cart[cartsDao.cart.length - 1].id) + 1;
                 }
                 else {
-                    this.id = 1;
+                    cartsDao.id = 1;
                 }
             }
-            return this.cart;
+            return cartsDao.cart;
         } catch (error) {
             if (error.code === "ENOENT") {
-                await fs.writeFile(this.path, JSON.stringify([], null, 2));
+                await fs.writeFile(cartsDao.path, JSON.stringify([], null, 2));
                 return [];
             } else {
                 throw new Error((
@@ -47,20 +52,20 @@ class Cart {
 
     async newCart() {
         try {
-            const data = await this.cartDisplay();
+            const data = await cartsDao.cartDisplay();
             if (!data) {
-                data = this.cart;
+                data = cartsDao.cart;
             } else if (data.length > 0) {
-                this.id = parseInt(data[data.length - 1].id) + 1;
+                cartsDao.id = parseInt(data[data.length - 1].id) + 1;
             }
             //this.id = 1;
             const cart = {
-                id: this.id,
+                id: cartsDao.id,
                 timestamp: moment().format("L LTS"),
                 products: [],
             };
             data.push(cart);
-            await fs.writeFile(this.path, JSON.stringify(data, null, 2));
+            await fs.writeFile(cartsDao.path, JSON.stringify(data, null, 2));
             return cart;
         } catch (error) {
             throw new Error((
@@ -71,13 +76,13 @@ class Cart {
 
     async deleteCart(id) {
         try {
-            const data = await this.cartDisplay();
+            const data = await cartsDao.cartDisplay();
             const index = data.findIndex((cart) => cart.id === parseInt(id));
             if (index === -1) {
                 throw new Error("Cart not found");
             }
             data.splice(index, 1);
-            await fs.writeFile(this.path, JSON.stringify(data, null, 2));
+            await fs.writeFile(cartsDao.path, JSON.stringify(data, null, 2));
             return `Se ha eliminado el carrito con id: ${id}`;
         } catch (error) {
             throw new Error((
@@ -88,7 +93,7 @@ class Cart {
 
     async cartProd(id) {
         try {
-            const data = await this.cartDisplay();
+            const data = await cartsDao.cartDisplay();
             const cart = data.find((cart) => cart.id == parseInt(id));
             if (!cart) {
                 throw new Error("Cart not found");
@@ -103,10 +108,10 @@ class Cart {
 
     async addProduct(idCart, product) {
         try {
-            const data = await this.cartDisplay();
+            const data = await cartsDao.cartDisplay();
             const cart = data.find((cart) => cart.id === parseInt(idCart));
             cart.products.push(product)
-            await fs.writeFile(this.path, JSON.stringify(data, null, 2));
+            await fs.writeFile(cartsDao.path, JSON.stringify(data, null, 2));
             return cart;
         } catch (error) {
             throw new Error((
@@ -118,11 +123,11 @@ class Cart {
     async eraseProduct(id, idProd) {
         try 
         {
-            const data = await this.cartDisplay();
+            const data = await cartsDao.cartDisplay();
             const cart = data.find((cart) => cart.id === parseInt(id));
             const index = cart.products.findIndex((product) => product.id === parseInt(idProd));
             cart.products.splice(index, 1);
-            await fs.writeFile(this.path, JSON.stringify(data, null, 2));
+            await fs.writeFile(cartsDao.path, JSON.stringify(data, null, 2));
             return cart;
         }
         catch (error)
